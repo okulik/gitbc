@@ -1,0 +1,154 @@
+#!/usr/bin/env ruby
+
+require 'gitbc'
+
+trap('SIGINT') {puts ''; exit!}
+
+options = {}
+options[:config_file] = GitHubBasecampExtractor::DEFAULT_CONFIG_FILE
+options[:quiet] = false
+
+opt_parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: git-bc <start_tag> [end_tag] [options]'
+
+  opts.on('-f FILE', '--config-file FILE', 'Use specific configurations file (default is ~/.gitbc)') do |f|
+    options[:config_file] = f
+  end
+
+  opts.on('-a TOKEN', '--github-token TOKEN', 'Use specific GitHub access token') do |a|
+    options[:github_access_token] = a
+  end
+
+  opts.on('-u USER', '--basecamp-user USER', 'Use specific Basecamp user') do |u|
+    options[:basecamp_user] = u
+  end
+
+  opts.on('-p PASSWORD', '--basecamp-password PASSWORD', 'Use specific Basecamp password') do |p|
+    options[:basecamp_password] = p
+  end
+
+  opts.on('-b BRANCH', '--branch BRANCH', 'Use specific git branch') do |b|
+    options[:branch] = b
+  end
+
+  opts.on('-r REPO', '--repository REPO', 'Query specific GitHub repository') do |r|
+    options[:repository] = r
+  end
+
+  opts.on('-q', '--quiet', 'Quiet tool output') do |q|
+    options[:quiet] = q
+  end
+
+  opts.on('-c', '--basecamp-content', 'Include content of the related Basecamp TODO') do |c|
+    options[:basecamp_content] = c
+  end
+
+  opts.on_tail('-h', '--help', 'Show this message') do
+    puts opts
+    exit
+  end
+end
+
+opt_parser.parse!
+
+start_tag, end_tag = ARGV
+if start_tag.nil?
+  puts 'missing start tag'
+  exit -1
+end
+options[:start_tag] = start_tag
+options[:end_tag] = end_tag || GitHubBasecampExtractor::DEFAULT_END_TAG
+
+unless File.exist?(options[:config_file])
+  puts 'bad settings file'
+  exit -1
+end
+
+settings = YAML.load_file(options[:config_file])
+options[:github_access_token] = settings['github_access_token'] if settings['github_access_token']
+options[:basecamp_user] = settings['basecamp_user'] if settings['basecamp_user']
+options[:basecamp_password] = settings['basecamp_password'] if settings['basecamp_password']
+
+if options[:github_access_token].nil?
+  puts 'missing github token'
+  exit -1
+end
+
+if options[:basecamp_user].nil?
+  puts 'missing basecamp user name'
+  exit -1
+end
+
+if options[:basecamp_password].nil?
+  puts 'missing basecamp password'
+  exit -1
+end
+
+gitbc = GitHubBasecampExtractor.new(options)
+
+unless gitbc.is_git_installed?
+  puts 'git not installed'
+  exit -1
+end
+
+unless gitbc.is_git_repo?
+  puts 'not a git repo'
+  exit -1
+end
+
+if options[:branch]
+  unless gitbc.git_branch_exists?(options[:branch])
+    puts 'no such branch'
+    exit -1
+  end
+else
+  options[:branch] = gitbc.git_branch
+end
+
+if options[:repository]
+  unless gitbc.repo_exists?(options[:repository])
+    puts 'no such repo'
+    exit -1
+  end
+else
+  options[:repository] = gitbc.git_repository
+end
+
+unless gitbc.remote_matches?(options[:repository])
+  puts 'no such remote'
+  exit -1
+end
+
+unless gitbc.revision_exists?(options[:start_tag])
+  puts 'no such start tag'
+  exit -1
+end
+
+unless gitbc.revision_exists?(options[:end_tag])
+  puts 'no such end tag'
+  exit -1
+end
+
+gitbc.update_options(options)
+
+print 'parsing git logs...' unless options[:quiet]
+pull_requests = gitbc.get_pull_requests_from_git_logs
+puts "#{pull_requests.count} pull requests".send(pull_requests.count == 0 ? :yellow : :green) unless options[:quiet]
+if pull_requests.count == 0
+  exit 0
+end
+
+print 'querying GitHub for PRs...' unless options[:quiet]
+unless gitbc.is_github_alive?
+  puts 'not available'.red unless options[:quiet]
+  exit -1
+end
+puts 'ok'.green unless options[:quiet]
+
+basecamp_todos = gitbc.get_basecamp_todos(pull_requests) do |_, _|
+  print '.'.green unless options[:quiet]
+end
+puts '' unless options[:quiet]
+puts basecamp_todos.to_json
+
+exit 0
