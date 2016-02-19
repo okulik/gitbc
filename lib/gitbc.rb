@@ -3,7 +3,6 @@ require 'colorize'
 require 'octokit'
 
 require 'optparse'
-require 'ostruct'
 require 'json'
 require 'yaml'
 require 'open3'

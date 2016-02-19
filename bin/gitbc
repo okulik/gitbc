@@ -149,6 +149,18 @@ basecamp_todos = gitbc.get_basecamp_todos(pull_requests) do |_, _|
   print '.'.green unless options[:quiet]
 end
 puts '' unless options[:quiet]
-puts basecamp_todos.to_json
+if basecamp_todos.count > 0
+  puts "start tag: #{options[:start_tag]}"
+  puts "end tag: #{options[:end_tag]}"
+  puts "branch: #{options[:branch]}"
+  puts "repository: #{options[:repository]}"
+  puts "********************************************"
+  basecamp_todos.each do |pr, todos|
+    puts "PR #{pr}"
+    todos.each do |todo|
+      puts "  #{todo[:url]}" + (todo[:content] ? ": #{todo[:content]}" : '')
+    end
+  end
+end
 
 exit 0
