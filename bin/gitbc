@@ -156,9 +156,10 @@ if basecamp_todos.count > 0
   puts "repository: #{options[:repository]}"
   puts ''
   basecamp_todos.each do |pr, todos|
-    puts "PR #{pr}, #{todos[:body]}"
+    body = todos[:body].gsub("\r\n", '')
+    puts "* PR #{pr}" + (todos[:lines].length == 0 && body.length > 0 ? ", #{body}" : '')
     todos[:lines].each do |line|
-      puts "  #{line[:url]}" + (line[:content] ? ", #{line[:content]}" : '')
+      puts "  --#{line[:url]}" + (line[:content] ? ", #{line[:content]}" : '')
     end
   end
 end
