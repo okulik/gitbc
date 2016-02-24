@@ -10,6 +10,7 @@ require 'open3'
 class GitHubBasecampExtractor
   DEFAULT_CONFIG_FILE = File.expand_path('~/.gitbc')
   DEFAULT_END_TAG = 'HEAD'
+  MAX_PR_BODY_LENGTH = 235
 
   def initialize(params)
     @params = params
@@ -75,10 +76,11 @@ class GitHubBasecampExtractor
     basecamp_todos = pull_requests.inject({}) do |memo, pull_request_id|
       pr = @github_client.pull_request(@params[:repository], pull_request_id)
       basecamp_lines = pr.attrs[:body].split("\r\n").grep(/.*https\:\/\/basecamp\.com.*/)
+      memo[pull_request_id] = {body: pr.attrs[:body][0..MAX_PR_BODY_LENGTH].strip, lines: []}
       if basecamp_lines.count > 0
-        memo[pull_request_id] = basecamp_lines.map { |line| {url: line[/.*(https\:\/\/basecamp\.com[^!?#:;,.\s]*)/, 1]} }.uniq
+        memo[pull_request_id][:lines] = basecamp_lines.map { |line| {url: line[/.*(https\:\/\/basecamp\.com[^!?#:;,.\s]*)/, 1]} }.uniq
         if @params[:basecamp_content]
-          memo[pull_request_id].each do |line|
+          memo[pull_request_id][:lines].each do |line|
             line[:url].match /(https\:\/\/basecamp\.com\/\d+\/)(.*)/ do |match|
               begin
                 ret = HTTParty.get "#{match[1]}api/v1/#{match[2]}.json", {basic_auth: {username: @params[:basecamp_user], password: @params[:basecamp_password]}, headers: {'Content-Type' => 'application/json', 'User-Agent' => "gitbc API (#{@params[:basecamp_user]})"}}
@@ -89,8 +91,7 @@ class GitHubBasecampExtractor
           end
         end
       end
-      memo[pull_request_id] ||= []
-      yield(pull_request_id, memo[pull_request_id])
+      yield(pull_request_id, memo[pull_request_id]) if block_given?
       memo
     end
     basecamp_todos

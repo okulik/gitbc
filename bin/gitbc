@@ -154,11 +154,11 @@ if basecamp_todos.count > 0
   puts "end tag: #{options[:end_tag]}"
   puts "branch: #{options[:branch]}"
   puts "repository: #{options[:repository]}"
-  puts "********************************************"
+  puts ''
   basecamp_todos.each do |pr, todos|
-    puts "PR #{pr}"
-    todos.each do |todo|
-      puts "  #{todo[:url]}" + (todo[:content] ? ": #{todo[:content]}" : '')
+    puts "PR #{pr}, #{todos[:body]}"
+    todos[:lines].each do |line|
+      puts "  #{line[:url]}" + (line[:content] ? ", #{todo[:content]}" : '')
     end
   end
 end
