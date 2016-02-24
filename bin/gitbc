@@ -158,7 +158,7 @@ if basecamp_todos.count > 0
   basecamp_todos.each do |pr, todos|
     puts "PR #{pr}, #{todos[:body]}"
     todos[:lines].each do |line|
-      puts "  #{line[:url]}" + (line[:content] ? ", #{todo[:content]}" : '')
+      puts "  #{line[:url]}" + (line[:content] ? ", #{line[:content]}" : '')
     end
   end
 end
