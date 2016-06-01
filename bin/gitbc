@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 
+require 'bundler/setup'
 require 'gitbc'
+
+require 'optionparser'
 
 trap('SIGINT') {puts ''; exit!}
 
@@ -11,27 +14,27 @@ options[:quiet] = false
 opt_parser = OptionParser.new do |opts|
   opts.banner = 'Usage: git-bc <start_tag> [end_tag] [options]'
 
-  opts.on('-f FILE', '--config-file FILE', 'Use specific configurations file (default is ~/.gitbc)') do |f|
+  opts.on('-f', '--config-file [FILE]', 'Use specific configurations file (default is ~/.gitbc)') do |f|
     options[:config_file] = f
   end
 
-  opts.on('-a TOKEN', '--github-token TOKEN', 'Use specific GitHub access token') do |a|
+  opts.on('-a', '--github-token [TOKEN]', 'Use specific GitHub access token') do |a|
     options[:github_access_token] = a
   end
 
-  opts.on('-u USER', '--basecamp-user USER', 'Use specific Basecamp user') do |u|
+  opts.on('-u', '--bc-user [USER]', 'Use specific Basecamp user') do |u|
     options[:basecamp_user] = u
   end
 
-  opts.on('-p PASSWORD', '--basecamp-password PASSWORD', 'Use specific Basecamp password') do |p|
+  opts.on('-p', '--bc-password [PASSWORD]', 'Use specific Basecamp password') do |p|
     options[:basecamp_password] = p
   end
 
-  opts.on('-b BRANCH', '--branch BRANCH', 'Use specific git branch') do |b|
+  opts.on('-b', '--branch [BRANCH]', 'Use specific git branch') do |b|
     options[:branch] = b
   end
 
-  opts.on('-r REPO', '--repository REPO', 'Query specific GitHub repository') do |r|
+  opts.on('-r', '--repository [REPO]', 'Query specific GitHub repository') do |r|
     options[:repository] = r
   end
 
@@ -39,7 +42,7 @@ opt_parser = OptionParser.new do |opts|
     options[:quiet] = q
   end
 
-  opts.on('-c', '--basecamp-content', 'Include content of the related Basecamp TODO') do |c|
+  opts.on('-c', '--basecamp-content', 'Include content of the related Basecamp to-do') do |c|
     options[:basecamp_content] = c
   end
 

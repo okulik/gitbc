@@ -26,15 +26,15 @@ The only required parameter is start tag. All other parameters, such as branch a
 
 ```bash
 Usage: git-bc <start_tag> [end_tag] [options]
-    -f, --config-file FILE           Use specific configurations file (default is ~/.gitbc)
-    -a, --github-token TOKEN         Use specific GitHub access token
-    -u, --basecamp-user USER         Use specific Basecamp user
-    -p, --basecamp-password PASSWORD Use specific Basecamp password
-    -b, --branch BRANCH              Use specific git branch
-    -r, --repository REPO            Query specific GitHub repository
-    -q, --quiet                      Quiet tool output
-    -c, --basecamp-content           Include content of the related Basecamp TODO
-    -h, --help                       Show this message
+    -f, --config-file [FILE]           Use specific configurations file (default is ~/.gitbc)
+    -a, --github-token [TOKEN]         Use specific GitHub access token
+    -u, --bc-user [USER]               Use specific Basecamp user
+    -p, --bc-password [PASSWORD]       Use specific Basecamp password
+    -b, --branch [BRANCH]              Use specific git branch
+    -r, --repository [REPO]            Query specific GitHub repository
+    -q, --quiet                        Quiet tool output
+    -c, --basecamp-content             Include content of the related Basecamp TODO
+    -h, --help                         Show this message
 ```
 
 GitHub and Basecamp credentials can be provided using CLI parameters or by creating a configuration file (default one used is ~/.gitbc).

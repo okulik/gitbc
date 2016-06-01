@@ -1,8 +1,9 @@
+require 'gitbc/version'
+
 require 'httparty'
 require 'colorize'
 require 'octokit'
 
-require 'optparse'
 require 'json'
 require 'yaml'
 require 'open3'
@@ -75,8 +76,13 @@ class GitHubBasecampExtractor
   def get_basecamp_todos(pull_requests)
     basecamp_todos = pull_requests.inject({}) do |memo, pull_request_id|
       pr = @github_client.pull_request(@params[:repository], pull_request_id)
-      basecamp_lines = pr.attrs[:body].split("\r\n").grep(/.*https\:\/\/basecamp\.com.*/)
-      memo[pull_request_id] = {body: pr.attrs[:body][0..MAX_PR_BODY_LENGTH].strip, lines: []}
+      if pr.attrs[:body]
+        basecamp_lines = pr.attrs[:body].split("\r\n").grep(/.*https\:\/\/basecamp\.com.*/)
+        memo[pull_request_id] = {body: pr.attrs[:body][0..MAX_PR_BODY_LENGTH].strip, lines: []}
+      else
+        basecamp_lines = []
+        memo[pull_request_id] = {body: '', lines: []}
+      end
       if basecamp_lines.count > 0
         memo[pull_request_id][:lines] = basecamp_lines.map { |line| {url: line[/.*(https\:\/\/basecamp\.com[^!?#:;,.\s]*)/, 1]} }.uniq
         if @params[:basecamp_content]
